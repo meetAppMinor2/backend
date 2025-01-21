@@ -11,3 +11,18 @@ const connectDB = async () => {
     }
 }
 export default connectDB
+
+
+
+// roomMember=[{
+//     member:"room1",
+//     role: owner,     //[member,owner,moderator],
+// },
+// {
+//     member:"room2",
+//     role: moderator,     //[member,owner,moderator],
+// },
+// {
+//     member:"room3",
+//     role: member,     //[member,owner,moderator],   
+// }]
