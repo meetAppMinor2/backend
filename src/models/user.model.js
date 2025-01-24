@@ -26,16 +26,27 @@ const UserSchema = new Schema({
         type: String, //cloudinary image url
         default: "https://res.cloudinary.com/dz3gbu49x/image/upload/v1620133983/avatar/avatar-1_cwv0vz.png",
     },
-    coverImage: {
-        type: String, //cloudinary image url
-        default: "https://res.cloudinary.com/dz3gbu49x/image/upload/v1620133983/avatar/avatar-1_cwv0vz.png",
-    },
     email: {
         type: String,
         required: [true, "Email is required."],
         unique: true,
         trim: true,
     },
+    roomMember: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Room', // The model you're referencing, which in this case is "Room"
+        default: [],
+    }],
+    instantMeetingJoin: [{
+        type: Schema.Types.ObjectId,
+        ref: 'instantMeet', // The model you're referencing, which in this case is "Room"
+        default: [],
+    }],
+    roomMeetingJoin: [{
+        type: Schema.Types.ObjectId,
+        ref: 'roomMeet', // The model you're referencing, which in this case is "Room"
+        default: [],
+    }],
     refreshToken: {
         type: String,
         default: "",
