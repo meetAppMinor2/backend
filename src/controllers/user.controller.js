@@ -27,7 +27,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // the below code is used to check if the avatar field is an array and has a length greater than 0 means weather it is undefined or not because having a undefined field will throw an error
     let avatarLocalPath;
-    const avatarCloudinary = null;
+    let avatarCloudinary = null;
     if (req.files && Array.isArray(req.files.avatar) && req.files.avatar.length > 0) {
 
         avatarLocalPath = req.files?.avatar[0]?.path;
