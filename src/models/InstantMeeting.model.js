@@ -12,24 +12,28 @@ const InstantMeetingSchema = new Schema({
 
     memebrs:[{
         type:Schema.Types.ObjectId,
-        ref: User ,
-        required:true
+        ref: "User" ,
+        
     }],
 
     duration:{
         type:String,
-        required:true
+        default="",
     },
 
     recording:{
-        type:[String],
-        default:[]
+        type:String,
+        default:"",
     },
 
     meetingCode:{
         type:String,
         default:NULL,
         required:true
+    },
+    isActive:{
+        type:boolean,
+        default:true;
     }
 },{timestamps:true});
 
