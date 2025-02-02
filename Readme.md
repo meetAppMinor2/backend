@@ -39,9 +39,9 @@ This project is a backend service for a web application. It provides APIs for us
 2. The server will be running at `http://localhost:3000`.
 
 ## API Endpoints
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login a user
-- `GET /api/users` - Get all users (protected route)
+- `POST /v1/api/auth/register` - Register a new user
+- `POST /v1/api/auth/login` - Login a user
+- `POST /v1/api/auth/login` - Logout a user
 
 ## License
 This project is licensed under the MIT License.
