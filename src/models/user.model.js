@@ -25,7 +25,7 @@ const UserSchema = new Schema({
     password: {
         type: String,
         required: [true, "Password is required."],
-        minlength: 6,
+        minlength: 8,
     },
     avatar: {
         type: String, //cloudinary image url
@@ -79,7 +79,7 @@ UserSchema.methods.generateAccessToken = async function () {
         _id: this._id,
         email: this.email,
         username: this.username,
-        fullname: this.fullname,
+        password: this.password,
     },
         `${process.env.ACCESS_TOKEN_SECRET}`,
         {
