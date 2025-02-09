@@ -98,7 +98,7 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new apiError(500, 'Error creating user');
     }
 
-    res.status(201).json(new apiResponse(200, createdUser, 'User created successfully'));
+    return res.status(201).json(new apiResponse(200, createdUser, 'User created successfully'));
 
 
 });
@@ -154,7 +154,7 @@ const loginUser = asyncHandler(async (req, res) => {
         secure: true,
     }
 
-    return res.status(200).cookie('refreshToken', refreshToken, options).cookie('accessToken', accessToken, options).json(new apiResponse(200, { user: loggedinUser, accessToken, refreshToken }, 'User logged in successfully'));
+    return res.status(200).cookie('refreshToken', refreshToken, options).cookie('accessToken', accessToken, options).json(new apiResponse(200, { user: loggedinUser, accessToken: accessToken, refreshToken: refreshToken }, 'User logged in successfully'));
 
 });
 
@@ -181,19 +181,22 @@ const loggedoutuser = asyncHandler(async (req, res) => {
 
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-    const incomingrefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+    // const incomingrefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+    const incomingrefreshToken =  req.body.refreshToken;
 
     if (!incomingrefreshToken) {
         throw new apiError(401, 'Unauthorized request');
     }
     try {
         const decodedToken = jwt.verify(incomingrefreshToken, `${process.env.REFRESH_TOKEN_SECRET}`)
-
+        console.log("decoded token ----------->"+decodedToken._id)
         const user = await User.findById(decodedToken._id)
         if (!user) {
             throw new apiError(404, 'Invalid refresh token');
         }
-        if (user?.refreshToken !== incomingrefreshToken) {
+        if (user.refreshToken != incomingrefreshToken) {
+            console.log("incoming token= "+incomingrefreshToken+"\n")
+            console.log("existing token= "+user.refreshToken+"\n")
             throw new apiError(401, 'refresh token is expired or used');
         }
 
@@ -201,10 +204,14 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             httpOnly: true,
             secure: true,
         }
+        
 
-        const { newaccessToken, newrefreshToken } = await generateAccessAndRefreshToken(user._id);
+        const { accessToken: newaccessToken, refreshToken: newrefreshToken } = await generateAccessAndRefreshToken(user._id);
+        console.log("access token "+newaccessToken);
+        console.log("refresh token "+newrefreshToken);
+        
 
-        res.status(200).cookie('refreshToken', newrefreshToken, options).cookie('accessToken', newaccessToken, options).json(new apiResponse(200, { accessToken: newaccessToken, refreshToken: newrefreshToken }, 'Token refreshed successfully'));
+        return res.status(200).cookie('refreshToken', newrefreshToken, options).cookie('accessToken', newaccessToken, options).json(new apiResponse(200, { accessToken: newaccessToken, refreshToken: newrefreshToken }, 'Token refreshed successfully'));
 
     } catch (error) {
         throw new apiError(401, error?.message || 'Invalid request token');
@@ -212,5 +219,57 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 })
 
+const changePassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword, confirmPassword } = req.body;
 
-export { registerUser, loginUser, loggedoutuser, refreshAccessToken };
+    if (!oldPassword || !newPassword || !confirmPassword) {
+        throw new apiError(400, 'Please provide old password and new password');
+    }
+
+    if (newPassword !== confirmPassword) {
+        throw new apiError(400, 'Password and confirm password does not match');
+    }
+
+    const user = await User.findById(req.user?._id);
+    const isValidPass = await user.isPasswordCorrect(oldPassword);
+
+    if (!isValidPass) {
+        throw new apiError(401, 'Invalid user credentials');
+    }
+
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false }); // to avoid the pre save hook
+
+    // generate new token because password is changed now
+    const { newaccessToken, newrefreshToken } = await generateAccessAndRefreshToken(user._id);
+
+    return res.status(200).cookie('refreshToken', newrefreshToken, options).cookie('accessToken', newaccessToken, options).json(new apiResponse(200, {}, 'Password changed successfully'));
+
+});
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user?._id).select('-password -refreshToken');  
+    res.status(200).json(new apiResponse(200, user, 'User details fetched successfully'));
+});
+
+const updateAvatar = asyncHandler(async (req, res) => {
+    const avatarLocalPath = req.files?.avatar[0]?.path;
+
+    if (!avatarLocalPath) {
+        throw new apiError(400, 'Please upload an avatar');
+    }
+
+    const avatarCloudinary = await uploadCloud(avatarLocalPath);
+
+    if (!avatarCloudinary.url) {
+        throw new apiError(500, 'Error uploading avatar');
+    }
+
+    // the new : true is used to return the updated document, by default this function returns the old document
+    const user = await User.findByIdAndUpdate(req.user?._id, { $set:{ avatar: avatarCloudinary.url }  }, { new: true }).select('-password -refreshToken');
+
+    return res.status(200).json(new apiResponse(200, user, 'Avatar updated successfully'));
+});
+
+
+export { registerUser, loginUser, loggedoutuser, refreshAccessToken, updateAvatar, getCurrentUser, changePassword };
