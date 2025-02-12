@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerUser, loginUser, loggedoutuser, refreshAccessToken } from "../controllers/user.controller.js";
+import { registerUser, loginUser, loggedoutuser, refreshAccessToken, getCurrentUser, updateAvatar } from "../controllers/user.controller.js";
 import {upload} from '../middlewares/multer.middleware.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 
@@ -20,5 +20,12 @@ router.route("/logout").post(verifyJWT, loggedoutuser)
 // here the 'next()' function is used to pass the control to the loggedoutuser function in the user.controller.js file
 
 router.route("/refreshToken").post(refreshAccessToken);
+
+
+router.route("/getUserDetail").post(getCurrentUser);
+router.route("/updateAvatar").post(
+    upload.fields([
+        { name: 'avatar', maxCount: 1 }
+    ]), updateAvatar);
 
 export default router;

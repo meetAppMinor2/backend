@@ -70,6 +70,9 @@ const registerUser = asyncHandler(async (req, res) => {
     if (req.files && Array.isArray(req.files.avatar) && req.files.avatar.length > 0) {
 
         avatarLocalPath = req.files?.avatar[0]?.path;
+        console.log(req.files?.avatar)
+        console.log(req.files?.avatar[0])
+        console.log(req.files?.avatar[0].path)
 
         // upload them to cloudinary, avatar
         avatarCloudinary = await uploadCloud(avatarLocalPath);
@@ -248,11 +251,32 @@ const changePassword = asyncHandler(async (req, res) => {
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.user?._id).select('-password -refreshToken');  
-    res.status(200).json(new apiResponse(200, user, 'User details fetched successfully'));
+
+    const incomingaccessToken =  req.body.accessToken;
+
+    if (!incomingaccessToken) {
+        throw new apiError(401, 'Unauthorized request');
+    }
+    try {
+        const decodedToken = jwt.verify(incomingaccessToken, `${process.env.ACCESS_TOKEN_SECRET}`)
+        console.log("decoded access token ----------->"+decodedToken._id)
+        const user = await User.findById(decodedToken._id).select('-password -refreshToken');  
+        if (!user) {
+            throw new apiError(404, 'Invalid refresh token');
+        }
+        // const user = await User.findById(req.user?._id).select('-password -refreshToken');  
+        return res.status(200).json(new apiResponse(200, user, 'User details fetched successfully'));
+    } catch (error) {
+        throw new apiError(401, error?.message || 'Invalid access token');
+    }
+    
 });
 
 const updateAvatar = asyncHandler(async (req, res) => {
+    console.log("filee")
+    console.log(req.files?.avatar)
+    const usr = await JSON.parse(req.body.user);
+    console.log(usr)
     const avatarLocalPath = req.files?.avatar[0]?.path;
 
     if (!avatarLocalPath) {
@@ -264,10 +288,14 @@ const updateAvatar = asyncHandler(async (req, res) => {
     if (!avatarCloudinary.url) {
         throw new apiError(500, 'Error uploading avatar');
     }
+    // console.log(req.user);
+    console.log(req.body.user);
+    // console.log(req.body.user);
+    console.log(usr["_id"])
 
     // the new : true is used to return the updated document, by default this function returns the old document
-    const user = await User.findByIdAndUpdate(req.user?._id, { $set:{ avatar: avatarCloudinary.url }  }, { new: true }).select('-password -refreshToken');
-
+    const user = await User.findByIdAndUpdate(usr._id, { $set:{ avatar: avatarCloudinary.url }  }, { new: true }).select('-password -refreshToken');
+    console.log(user)
     return res.status(200).json(new apiResponse(200, user, 'Avatar updated successfully'));
 });
 
