@@ -300,4 +300,13 @@ const updateAvatar = asyncHandler(async (req, res) => {
 });
 
 
-export { registerUser, loginUser, loggedoutuser, refreshAccessToken, updateAvatar, getCurrentUser, changePassword };
+const getAllUsers = asyncHandler(async (req, res) => {
+    try {
+        const users = await User.find().select('-password -refreshToken');
+        return res.status(200).json(new apiResponse(200, users, 'Users fetched successfully'));
+    } catch (error) {
+        throw new apiError(500, 'Error fetching users');
+    }
+});
+
+export { registerUser, loginUser, loggedoutuser, refreshAccessToken, updateAvatar, getCurrentUser, changePassword, getAllUsers };
