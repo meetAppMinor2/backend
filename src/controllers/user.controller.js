@@ -2,6 +2,7 @@ import e from 'express';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { apiError } from '../utils/apiError.js';
 import { User } from '../models/user.model.js';
+import { Organization } from '../models/organization.model.js';
 import { uploadCloud } from '../utils/cloudnary.js';
 import { apiResponse } from '../utils/apiResponse.js';
 import jwt from 'jsonwebtoken';
@@ -309,4 +310,45 @@ const getAllUsers = asyncHandler(async (req, res) => {
     }
 });
 
-export { registerUser, loginUser, loggedoutuser, refreshAccessToken, updateAvatar, getCurrentUser, changePassword, getAllUsers };
+//added by bhavesh - getAllOraganization 
+const getAllOrganizations = asyncHandler(async (req, res) => {
+    const { username, email } = req.body;
+    
+    // First find the user by username or email
+    const user = await User.findOne({
+        $or: [
+            { username },
+            { email }
+        ]
+    });
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    // Then find organizations for this user
+    const organizations = await Organization.find({
+        $or: [
+            { owner: user._id },
+            { "members.user": user._id }
+        ]
+    })
+    .populate("owner", "username email")
+    .populate("members.user", "username email");
+
+    if (!organizations?.length) {
+        return res.status(200).json(
+            new apiResponse(200, [], "No organizations found")
+        );
+    }
+
+    return res.status(200).json(
+        new apiResponse(
+            200, 
+            organizations,
+            "Organizations fetched successfully"
+        )
+    );
+});
+
+export { registerUser, loginUser, loggedoutuser, refreshAccessToken, updateAvatar, getCurrentUser, changePassword, getAllUsers, getAllOrganizations };
