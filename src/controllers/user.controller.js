@@ -312,13 +312,12 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
 //added by bhavesh - getAllOraganization 
 const getAllOrganizations = asyncHandler(async (req, res) => {
-    const { username, email } = req.body;
+    const { username} = req.body;
     
     // First find the user by username or email
     const user = await User.findOne({
         $or: [
-            { username },
-            { email }
+            { username }
         ]
     });
 
@@ -351,4 +350,21 @@ const getAllOrganizations = asyncHandler(async (req, res) => {
     );
 });
 
-export { registerUser, loginUser, loggedoutuser, refreshAccessToken, updateAvatar, getCurrentUser, changePassword, getAllUsers, getAllOrganizations };
+
+const createOrganization = asyncHandler(async (req, res) => {
+    const {name, description} = req.body;
+
+    const existingOrganization = await Organization.findOne({ name, owner: req.user._id }); 
+        if (existingOrganization) {
+            return res.status(400).json({ message: "Organization name already exists" });
+        }
+
+    if(!name){
+        return res.status(400).json({message: "Organization name is required"});    
+    }
+    const newOrganization = new Organization({name, description, owner: req.user._id});
+    await newOrganization.save();
+    return res.status(200).json(new apiResponse(200, newOrganization, "Organization created successfully"));
+});
+
+export { registerUser, loginUser, loggedoutuser, refreshAccessToken, updateAvatar, getCurrentUser, changePassword, getAllUsers, getAllOrganizations, createOrganization };
