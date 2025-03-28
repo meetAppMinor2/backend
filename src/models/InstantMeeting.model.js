@@ -18,7 +18,7 @@ const InstantMeetingSchema = new Schema({
 
     duration:{
         type:String,
-        default="",
+        default:"",
     },
 
     recording:{
@@ -33,7 +33,7 @@ const InstantMeetingSchema = new Schema({
     },
     isActive:{
         type:boolean,
-        default:true;
+        default:true
     }
 },{timestamps:true});
 
