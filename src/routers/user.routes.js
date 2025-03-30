@@ -30,7 +30,7 @@ router.route("/updateAvatar").post(
 
 router.route("/getUsers").get(verifyJWT, getAllUsers);
 
-router.route("/organizations").get(getAllOrganizations); //route for getting all the organizations 
+router.route("/organizations").post(getAllOrganizations); //route for getting all the organizations 
 router.route("/createOrganization").post(verifyJWT, createOrganization); //route for creating a new organization
 
 export default router;
