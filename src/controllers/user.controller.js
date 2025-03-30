@@ -312,44 +312,47 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
 //added by bhavesh - getAllOraganization 
 const getAllOrganizations = asyncHandler(async (req, res) => {
-    const { username} = req.body;
-    
-    // First find the user by username or email
-    const user = await User.findOne({
-        $or: [
-            { username }
-        ]
-    });
+    try {
+        // Extract the access token from the Authorization header
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            throw new apiError(401, "Unauthorized request: No access token provided");
+        }
 
-    if (!user) {
-        throw new ApiError(404, "User not found");
-    }
+        const accessToken = authHeader.split(" ")[1]; // Extract the token after "Bearer"
 
-    // Then find organizations for this user
-    const organizations = await Organization.find({
-        $or: [
-            { owner: user._id },
-            { "members.user": user._id }
-        ]
-    })
-    .populate("owner", "username email")
-    .populate("members.user", "username email");
+        // Decode the access token to get the user ID
+        const decodedToken = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+        const userId = decodedToken._id;
 
-    if (!organizations?.length) {
+        if (!userId) {
+            throw new apiError(401, "Invalid access token");
+        }
+
+        // Find organizations where the user is the owner or a member
+        const organizations = await Organization.find({
+            $or: [
+                { owner: userId },
+                { "members.user": userId }
+            ]
+        })
+            .populate("owner", "username email")
+            .populate("members.user", "username email");
+
+        if (!organizations?.length) {
+            return res.status(200).json(
+                new apiResponse(200, [], "No organizations found")
+            );
+        }
+
         return res.status(200).json(
-            new apiResponse(200, [], "No organizations found")
+            new apiResponse(200, organizations, "Organizations fetched successfully")
         );
+    } catch (error) {
+        console.error(error);
+        throw new apiError(500, error.message || "Error fetching organizations");
     }
-
-    return res.status(200).json(
-        new apiResponse(
-            200, 
-            organizations,
-            "Organizations fetched successfully"
-        )
-    );
 });
-
 
 const createOrganization = asyncHandler(async (req, res) => {
     const {name, description} = req.body;
