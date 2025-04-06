@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerUser, loginUser, loggedoutuser, refreshAccessToken, getCurrentUser, updateAvatar, getAllUsers, getAllOrganizations, createOrganization} from "../controllers/user.controller.js";
+import { registerUser, loginUser, loggedoutuser, refreshAccessToken, getCurrentUser, updateAvatar, getAllUsers} from "../controllers/user.controller.js";
 import {upload} from '../middlewares/multer.middleware.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 
@@ -30,7 +30,5 @@ router.route("/updateAvatar").post(
 
 router.route("/getUsers").get(verifyJWT, getAllUsers);
 
-router.route("/organizations").post(getAllOrganizations); //route for getting all the organizations 
-router.route("/createOrganization").post(verifyJWT, createOrganization); //route for creating a new organization
 
 export default router;

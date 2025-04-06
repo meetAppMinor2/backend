@@ -23,9 +23,10 @@ app.use(cookieParser())
 
 // routes import
 import userRouter from "./routers/user.routes.js"
-
+import organisationRouter from "./routers/organisation.routes.js"   
 // routes declaration
-app.use("/api/v1/users", userRouter) // will redirect you to user.routes.js where it will be handled by the userRouter and the path will be /users/register 
+app.use("/api/v1/users", userRouter)
+app.use("/api/v1/organisation", organisationRouter) // will redirect you to user.routes.js where it will be handled by the userRouter and the path will be /users/register 
 // path -> http://localhost:9000/api/v1/users/register
 
 
