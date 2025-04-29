@@ -72,6 +72,26 @@ const createOrganization = asyncHandler(async (req, res) => {
     return res.status(200).json(new apiResponse(200, newOrganization, "Organization created successfully"));
 });
 
+const deleteOrganization = asyncHandler(async (req, res) => {   
+    const { organizationId } = req.params;
+
+    // Check if the organization exists
+    const organization = await Organization.findById(organizationId);
+    if (!organization) {
+        return res.status(404).json({ message: "Organization not found" });
+    }   
+    // Check if the user is the owner of the organization
+    if (organization.owner.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: "You are not authorized to delete this organization" });
+    }
+    // Delete the organization
+
+    await Organization.findByIdAndDelete(organizationId);
+    return res.status(200).json(new apiResponse(200, null, "Organization deleted successfully"));
+}
+);
+// const getOrganizationById = asyncHandler(async (req, res) => {
 
 
-export {getAllOrganizations, createOrganization}
+
+export {getAllOrganizations, createOrganization, deleteOrganization}

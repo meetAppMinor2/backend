@@ -90,5 +90,28 @@ const getClassesByOrganization = asyncHandler(async (req, res) => {
     return res.status(200).json(new apiResponse(200, { classes, count: classes.length }, "Classes fetched successfully"));
 });
 
+const deleteClass = asyncHandler(async (req, res) => {  
+    const { organizationId, classId } = req.params;
 
-export { createClass, getClassesByOrganization };
+    // Check if the organization exists
+    const organization = await Organization.findById(organizationId);
+    if (!organization) {
+        return res.status(404).json({ message: "Organization not found" });
+    }   
+    // Check if the class exists
+    const classToDelete = await Classes.findById(classId);
+    if (!classToDelete) {
+        return res.status(404).json({ message: "Class not found" });
+    }
+    // Check if the class belongs to the organization
+    if (classToDelete.organization.toString() !== organizationId) {
+        return res.status(403).json({ message: "You are not authorized to delete this class" });
+    }
+    // Delete the class 
+    await Classes.findByIdAndDelete(classId);
+    return res.status(200).json(new apiResponse(200, null, "Class deleted successfully"));
+}
+);
+
+
+export { createClass, getClassesByOrganization, deleteClass };
