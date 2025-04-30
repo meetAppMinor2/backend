@@ -3,32 +3,6 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import {Organization} from "../models/organization.model.js"; 
-// Create a class under an organization
-// const createClass = asyncHandler(async (req, res) => {
-//     const { name, description, organizationId } = req.body;
-
-//     if (!name || !organizationId) {
-//         return res.status(400).json({ message: "Class name and organization ID are required" });
-//     }
-
-//     // Check if the organization exists
-//     const organization = await Organization.findById(organizationId);
-//     if (!organization) {
-//         return res.status(404).json({ message: "Organization not found" });
-//     }
-
-//     // Create the class
-//     const newClass = new Classes({
-//         name,
-//         description,
-//         organization: organizationId,
-//     });
-
-//     await newClass.save();
-
-//     return res.status(200).json(new apiResponse(200, newClass, "Class created successfully"));
-// });
-
 
 const createClass = asyncHandler(async (req, res) => {
     const { name, description } = req.body;
@@ -56,22 +30,6 @@ const createClass = asyncHandler(async (req, res) => {
     return res.status(200).json(new apiResponse(200, newClass, "Class created successfully"));
 });
 
-
-// Get all classes under an organization
-// const getClassesByOrganization = asyncHandler(async (req, res) => {
-//     const { organizationId } = req.params;
-
-//     // Check if the organization exists
-//     const organization = await Organization.findById(organizationId);
-//     if (!organization) {
-//         return res.status(404).json({ message: "Organization not found" });
-//     }
-
-//     // Fetch all classes under the organization
-//     const classes = await Classes.find({ organization: organizationId });
-
-//     return res.status(200).json(new apiResponse(200, classes, "Classes fetched successfully"));
-// });
 
 const getClassesByOrganization = asyncHandler(async (req, res) => {
     const { organizationId } = req.params;
@@ -114,4 +72,27 @@ const deleteClass = asyncHandler(async (req, res) => {
 );
 
 
-export { createClass, getClassesByOrganization, deleteClass };
+
+const getClassMembers = asyncHandler(async (req, res) => {
+    const { classId } = req.params;
+  
+    // Fetch the class with populated user data for all students
+    const classData = await Classes.findById(classId)
+      .populate("students.user", "username avatar") // Populate `user` field with specific fields
+      .exec();
+  
+    // If the class is not found, return 404
+    if (!classData) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+  
+    // Return the populated class data
+    return res.status(200).json({
+      success: true,
+      data: classData
+    });
+  });
+  
+
+
+export { createClass, getClassesByOrganization, deleteClass, getClassMembers };
