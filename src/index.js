@@ -1,9 +1,7 @@
 
 import connectDB from "./db/db.js";
 import dotenv from "dotenv";
-import { app } from "./app.js";
-
-
+import {app, server} from "./lib/socket.js";
 
 dotenv.config({
   path: './.env'
@@ -15,7 +13,7 @@ connectDB()
     app.on("error", (err) => {
       console.log("Express error-->", err.message);
     });
-    app.listen(process.env.PORT || 9000, () => {
+    server.listen(process.env.PORT || 9000, () => {
       console.log(`Example app listening on port ${process.env.PORT || 9000}!`)
     });
     app.get("/", (req, res) => {
