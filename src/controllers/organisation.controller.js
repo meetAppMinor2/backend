@@ -9,9 +9,6 @@ import dotenv from "dotenv";
 dotenv.config({
     path: "./.env"
 });
-
-
-
 //added by bhavesh - getAllOraganization 
 const getAllOrganizations = asyncHandler(async (req, res) => {
     try {
