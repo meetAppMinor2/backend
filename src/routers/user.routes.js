@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerUser, loginUser, loggedoutuser, refreshAccessToken, getCurrentUser, updateAvatar, getAllUsers} from "../controllers/user.controller.js";
+import { registerUser, loginUser, loggedoutuser, refreshAccessToken,getMultipleUserDetails, getCurrentUser, updateAvatar, getAllUsers} from "../controllers/user.controller.js";
 import {upload} from '../middlewares/multer.middleware.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 import { fetchInvites, acceptInvite, declineInvite } from "../controllers/invite.controller.js";
@@ -34,5 +34,6 @@ router.route("/getUsers").get(verifyJWT, getAllUsers);
 router.route("/invites").get(verifyJWT, fetchInvites); 
 router.route("/invites/:inviteId/accept").post(verifyJWT, acceptInvite); // Accept an invite
 router.route("/invites/:inviteId/decline").post(verifyJWT, declineInvite); // Accept an invite
-router.route("/classes/:classId/members").get(verifyJWT, getClassMembers); // Get all members of a class
+router.route("/classes/:classId/members").get(verifyJWT, getClassMembers);
+router.route("/getMultipleUsers").post(verifyJWT,getMultipleUserDetails) // Get all members of a class
 export default router;

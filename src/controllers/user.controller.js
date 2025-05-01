@@ -299,6 +299,37 @@ const updateAvatar = asyncHandler(async (req, res) => {
     return res.status(200).json(new apiResponse(200, user, 'Avatar updated successfully'));
 });
 
+const getMultipleUserDetails = asyncHandler(async (req, res) => {
+    const userIds = req.body.userIds;
+
+    if (!userIds || !Array.isArray(userIds)) {
+        throw new apiError(400, 'User IDs array is required');
+    }
+
+    try {
+        console.log("Requested user IDs:", userIds);
+        
+        // Fetch all requested users' details
+        const users = await User.find({
+            _id: { $in: userIds }
+        }).select('-password -refreshToken');
+        
+        console.log("Found users:", users);
+        
+        // Create a map of user data keyed by their ID
+        const usersMap = users.reduce((acc, user) => {
+            acc[user._id] = user;
+            return acc;
+        }, {});
+        
+        console.log("Users map:", usersMap);
+        
+        return res.status(200).json(new apiResponse(200, usersMap, 'Users details fetched successfully'));
+    } catch (error) {
+        console.error("Error in getMultipleUserDetails:", error);
+        throw new apiError(500, error?.message || 'Error fetching user details');
+    }
+});
 
 const getAllUsers = asyncHandler(async (req, res) => {
     try {
@@ -309,4 +340,4 @@ const getAllUsers = asyncHandler(async (req, res) => {
     }
 });
 
-export { registerUser, loginUser, loggedoutuser, refreshAccessToken, updateAvatar, getCurrentUser, changePassword, getAllUsers };
+export { registerUser, loginUser, loggedoutuser, refreshAccessToken, updateAvatar, getCurrentUser, changePassword, getAllUsers, getMultipleUserDetails};
