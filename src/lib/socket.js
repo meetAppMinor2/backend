@@ -39,22 +39,22 @@ io.on("connection", (socket) => {
     socket.leave(groupId);
   });
 
-  socket.on("sendMessage", async (message) => {
-    try {
-      const { text, classId, senderId } = message;
+  // socket.on("sendMessage", async (message) => {
+  //   try {
+  //     const { text, classId, senderId } = message;
 
-      const newMessage = new Message({ senderId, classId, text });
-      const savedMessage = await newMessage.save();
+  //     const newMessage = new Message({ senderId, classId, text });
+  //     const savedMessage = await newMessage.save();
 
-      const populatedMessage = await Message.findById(savedMessage._id)
-        .populate("senderId", "username fullname avatar");
+  //     const populatedMessage = await Message.findById(savedMessage._id)
+  //       .populate("senderId", "username fullname avatar");
 
-      // ✅ Emit to everyone in the room, including sender
-      io.to(classId).emit("newMessage", populatedMessage);
-    } catch (error) {
-      console.error("Error in socket sendMessage:", error.message);
-    }
-  });
+  //     // ✅ Emit to everyone in the room, including sender
+  //     io.to(classId).emit("newMessage", populatedMessage);
+  //   } catch (error) {
+  //     console.error("Error in socket sendMessage:", error.message);
+  //   }
+  // });
 
   socket.on("disconnect", () => {
     console.log("A user disconnected", socket.id);
