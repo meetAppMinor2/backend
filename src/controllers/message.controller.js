@@ -81,45 +81,32 @@ const sendGroupMessage = async (req, res) => {
   
   
 
-const sendMessage = async (req, res) => {
+  const sendMessage = async (req, res) => {
     try {
-        const { text } = req.body;
-        const { classId } = req.params;
-        const senderId = req.user._id;
-
-        // Create new message
-        const newMessage = new Message({
-            senderId,
-            classId,
-            text,
-            // image
-        });
-
-        // Save message to database
-        const savedMessage = await newMessage.save();
-        
-        // Populate sender information
-        const populatedMessage = await Message.findById(savedMessage._id)
-            .populate("senderId", "username fullname avatar");
-
-        // Emit the message to all users in the class room
-        const group = await Classes.findById(classId);
-        const memberSocketIds = group.students
-            .filter(student => student.user.toString() !== senderId.toString())
-            .map(student => getReceiverSocketId(student.user.toString()));
-
-        // Emit message to all class members
-        memberSocketIds.forEach(socketId => {
-            if (socketId) {
-                io.to(socketId).emit("newMessage", populatedMessage);
-            }
-        });
-
-        res.status(201).json(populatedMessage);
+      const { text } = req.body;
+      const { classId } = req.params;
+      const senderId = req.user._id;
+  
+      const newMessage = new Message({
+        senderId,
+        classId,
+        text,
+      });
+  
+      const savedMessage = await newMessage.save();
+  
+      const populatedMessage = await Message.findById(savedMessage._id)
+        .populate("senderId", "username fullname avatar");
+  
+      // ✅ Emit to the whole room (sender + receivers)
+      io.to(classId).emit("newMessage", populatedMessage);
+  
+      res.status(201).json(populatedMessage);
     } catch (error) {
-        console.log("Error in sendMessage controller: ", error.message);
-        res.status(500).json({ error: "Internal server error" });
+      console.log("Error in sendMessage controller: ", error.message);
+      res.status(500).json({ error: "Internal server error" });
     }
-};
+  };
+  
 
 export { getMessages, sendMessage };
