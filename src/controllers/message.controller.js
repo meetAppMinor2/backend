@@ -81,7 +81,7 @@ const sendGroupMessage = async (req, res) => {
   
   
 
-const sendMessage = async (req, res) => {
+  const sendMessage = async (req, res) => {
     try {
         const { text } = req.body;
         const { classId } = req.params;
@@ -92,15 +92,14 @@ const sendMessage = async (req, res) => {
             senderId,
             classId,
             text,
-            // image
         });
 
         // Save message to database
         const savedMessage = await newMessage.save();
-        
+
         // Populate sender information
         const populatedMessage = await Message.findById(savedMessage._id)
-            .populate("senderId", "username fullname avatar");
+            .populate("senderId", "username fullname");
 
         // Emit the message to all users in the class room
         const group = await Classes.findById(classId);
