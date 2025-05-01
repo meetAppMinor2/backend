@@ -81,7 +81,7 @@ const getClassMembers = asyncHandler(async (req, res) => {
         .populate("students.user", "username avatar") // Populate `user` field with specific fields
         .populate({
             path: "organization",
-            select: "owner", // Select only the owner field from the organization
+            select: "owner name", // Select only the owner field from the organization
             populate: {
                 path: "owner", // Populate the owner field
                 select: "username email avatar", // Select specific fields for the owner
@@ -97,6 +97,8 @@ const getClassMembers = asyncHandler(async (req, res) => {
     // Extract owner and students
     const owner = classData.organization?.owner || null;
     const students = classData.students || [];
+    const name = classData.name || null;
+    const orgName = classData.organization?.name || null;
   
     // Return the populated class data along with the owner
     return res.status(200).json({
@@ -104,6 +106,8 @@ const getClassMembers = asyncHandler(async (req, res) => {
         data: {
             owner,
             students,
+            name,
+            orgName,    
         },
     });
   });
