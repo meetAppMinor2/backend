@@ -76,20 +76,35 @@ const deleteClass = asyncHandler(async (req, res) => {
 const getClassMembers = asyncHandler(async (req, res) => {
     const { classId } = req.params;
   
-    // Fetch the class with populated user data for all students
+    // Fetch the class with populated user data for all students and organization owner
     const classData = await Classes.findById(classId)
-      .populate("students.user", "username avatar") // Populate `user` field with specific fields
-      .exec();
+        .populate("students.user", "username avatar") // Populate `user` field with specific fields
+        .populate({
+            path: "organization",
+            select: "owner", // Select only the owner field from the organization
+            populate: {
+                path: "owner", // Populate the owner field
+                select: "username email avatar", // Select specific fields for the owner
+            },
+        })
+        .exec();
   
     // If the class is not found, return 404
     if (!classData) {
-      return res.status(404).json({ message: "Class not found" });
+        return res.status(404).json({ message: "Class not found" });
     }
   
-    // Return the populated class data
+    // Extract owner and students
+    const owner = classData.organization?.owner || null;
+    const students = classData.students || [];
+  
+    // Return the populated class data along with the owner
     return res.status(200).json({
-      success: true,
-      data: classData
+        success: true,
+        data: {
+            owner,
+            students,
+        },
     });
   });
   
