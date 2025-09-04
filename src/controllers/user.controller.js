@@ -53,6 +53,11 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new apiError(400, 'Please fill all the details');
     }
 
+    // Additional password validation
+    if (password && password.length < 8) {
+        throw new apiError(400, 'Password must be at least 8 characters long');
+    }
+
     // check if user already exists: username, email
     // it uses the findOne method to find a user with the same username or email
     const existedUser = await User.findOne({
@@ -84,24 +89,32 @@ const registerUser = asyncHandler(async (req, res) => {
 
 
 
-    const user = await User.create({
-        fullname,
-        username,
-        email,
-        password,
-        avatar: avatarCloudinary?.url || ""
+    try {
+        const user = await User.create({
+            fullname,
+            username,
+            email,
+            password,
+            avatar: avatarCloudinary?.url || ""
+        });
 
-    })
+        // the .select method is used to remove the password and refreshToken fields from the response by setting them to false
+        // it will use - to remove the fields and seprate them by space
+        const createdUser = await User.findById(user._id).select('-password -refreshToken');
 
-    // the .select method is used to remove the password and refreshToken fields from the response by setting them to false
-    // it will use - to remove the fields and seprate them by space
-    const createdUser = await User.findById(user._id).select('-password -refreshToken');
+        if (!createdUser) {
+            throw new apiError(500, 'Error creating user');
+        }
 
-    if (!createdUser) {
-        throw new apiError(500, 'Error creating user');
+        return res.status(201).json(new apiResponse(200, createdUser, 'User created successfully'));
+    } catch (error) {
+        if (error.name === 'ValidationError') {
+            // Handle Mongoose validation errors
+            const errorMessages = Object.values(error.errors).map(err => err.message);
+            throw new apiError(400, errorMessages.join(', '));
+        }
+        throw error; // Re-throw other errors
     }
-
-    return res.status(201).json(new apiResponse(200, createdUser, 'User created successfully'));
 
 
 });
@@ -222,32 +235,54 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 })
 
-const changePassword = asyncHandler(async (req, res) => {
-    const { oldPassword, newPassword, confirmPassword } = req.body;
+const updateUserAccount = asyncHandler(async (req, res) => {
+    const { fullname, email } = req.body;
 
-    if (!oldPassword || !newPassword || !confirmPassword) {
-        throw new apiError(400, 'Please provide old password and new password');
+    if (!fullname || !email) {
+        throw new apiError(400, "All fields are required");
     }
 
-    if (newPassword !== confirmPassword) {
-        throw new apiError(400, 'Password and confirm password does not match');
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                fullname,
+                email
+            }
+        },
+        { new: true }
+    ).select("-password -refreshToken");
+
+    return res
+        .status(200)
+        .json(new apiResponse(200, user, "Account details updated successfully"));
+});
+
+const changePassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+        throw new apiError(400, "Both old password and new password are required");
     }
 
     const user = await User.findById(req.user?._id);
-    const isValidPass = await user.isPasswordCorrect(oldPassword);
-
-    if (!isValidPass) {
-        throw new apiError(401, 'Invalid user credentials');
+    if (!user) {
+        throw new apiError(404, "User not found");
     }
 
+    // Check if the old password is correct
+    const isOldPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+    if (!isOldPasswordCorrect) {
+        throw new apiError(400, "Old password is incorrect");
+    }
+
+    // Update the password
     user.password = newPassword;
-    await user.save({ validateBeforeSave: false }); // to avoid the pre save hook
+    await user.save({ validateBeforeSave: false });
 
-    // generate new token because password is changed now
-    const { newaccessToken, newrefreshToken } = await generateAccessAndRefreshToken(user._id);
-
-    return res.status(200).cookie('refreshToken', newrefreshToken, options).cookie('accessToken', newaccessToken, options).json(new apiResponse(200, {}, 'Password changed successfully'));
-
+    return res
+        .status(200)
+        .json(new apiResponse(200, {}, "Password changed successfully"));
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
@@ -340,4 +375,4 @@ const getAllUsers = asyncHandler(async (req, res) => {
     }
 });
 
-export { registerUser, loginUser, loggedoutuser, refreshAccessToken, updateAvatar, getCurrentUser, changePassword, getAllUsers, getMultipleUserDetails};
+export { registerUser, loginUser, loggedoutuser, refreshAccessToken, updateAvatar, getCurrentUser, getAllUsers, getMultipleUserDetails,updateUserAccount, changePassword };

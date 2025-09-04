@@ -9,7 +9,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "http://localhost:5174"],
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -35,8 +35,32 @@ io.on("connection", (socket) => {
     console.log(`User ${socket.id} joined class ${classId}`);
   });
 
+  // Join a video room for instant messaging
+  socket.on("joinRoom", (roomId) => {
+    socket.join(roomId);
+    console.log(`User ${socket.id} joined room ${roomId}`);
+  });
+
+  // Join organization/class for persistent messaging
+  socket.on("joinOrganization", (organizationId) => {
+    const roomId = `persistent_organization_${organizationId}`;
+    socket.join(roomId);
+    console.log(`User ${socket.id} joined organization ${organizationId}`);
+  });
+
+  socket.on("joinClassRoom", (classId) => {
+    const roomId = `persistent_class_${classId}`;
+    socket.join(roomId);
+    console.log(`User ${socket.id} joined class room ${classId}`);
+  });
+
   socket.on("leaveGroup", (groupId) => {
     socket.leave(groupId);
+  });
+
+  socket.on("leaveRoom", (roomId) => {
+    socket.leave(roomId);
+    console.log(`User ${socket.id} left room ${roomId}`);
   });
 
   // socket.on("sendMessage", async (message) => {
