@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import User from "./user.model.js";
+import { User } from "./user.model.js";
 
 const InstantMeetingSchema = new Schema({
     host:{
@@ -28,11 +28,11 @@ const InstantMeetingSchema = new Schema({
 
     meetingCode:{
         type:String,
-        default:NULL,
+        default:null,
         required:true
     },
     isActive:{
-        type:boolean,
+        type:Boolean,
         default:true
     }
 },{timestamps:true});
