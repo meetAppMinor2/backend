@@ -3,9 +3,9 @@ import connectDB from "./db/db.js";
 import dotenv from "dotenv";
 import {app, server} from "./lib/socket.js";
 
-dotenv.config({
-  path: './.env'
-})
+dotenv.config();
+
+
 
 connectDB()
   .then(() => {
